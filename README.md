@@ -1,5 +1,5 @@
 # QUT
 
-A Julia package ofr quasi upper triangular matrices
+A Julia package for quasi upper triangular matrices
 
 WORK IN PROGRESS
