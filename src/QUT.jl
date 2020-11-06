@@ -409,7 +409,7 @@ A_mul_Bt!(c::AbstractMatrix,a::QuasiUpperTriangular,b::QuasiUpperTriangular) = A
 function A_mul_B!(c::VecOrMat{Float64}, offset_c::Int64, a::VecOrMat{Float64}, offset_a::Int64,
                   ma::Int64, na::Int64, b::QuasiUpperTriangular, offset_b::Int64, nb::Int64)
     m, n = size(b)
-    copy!(c, offset_c, a, offset_a, ma*na)
+    copyto!(c, offset_c, a, offset_a, ma*na)
     alpha = 1.0
     ccall((@blasfunc(dtrmm_), libblas), Cvoid,
           (Ref{UInt8}, Ref{UInt8}, Ref{UInt8}, Ref{UInt8}, Ref{BlasInt}, Ref{BlasInt},
@@ -431,7 +431,7 @@ end
 
 function A_mul_B!(c::VecOrMat{Float64}, offset_c::Int64, a::QuasiUpperTriangular, offset_a::Int64,
                   ma::Int64, na::Int64, b::VecOrMat{Float64}, offset_b::Int64, nb::Int64)
-    copy!(c, offset_c, b, offset_b, na*nb)
+    copyto!(c, offset_c, b, offset_b, na*nb)
     alpha = 1.0
     ccall((@blasfunc(dtrmm_), libblas), Cvoid,
           (Ref{UInt8}, Ref{UInt8}, Ref{UInt8}, Ref{UInt8}, Ref{BlasInt}, Ref{BlasInt},
@@ -454,7 +454,7 @@ end
 function A_mul_B!(c::Array{Float64,1}, offset_c::Int64,
                   a::QuasiUpperTriangular, offset_a::Int64, ma::Int64, na::Int64,
                   b::SubArray{Float64,1,Array{Float64,1},Tuple{UnitRange{Int64}},true}, offset_b::Int64, nb::Int64)
-    copy!(c, offset_c, b, offset_b, na*nb)
+    copyto!(c, offset_c, b, offset_b, na*nb)
     alpha = 1.0
     ccall((@blasfunc(dtrmm_), libblas), Cvoid,
           (Ref{UInt8}, Ref{UInt8}, Ref{UInt8}, Ref{UInt8}, Ref{BlasInt}, Ref{BlasInt},
@@ -480,7 +480,7 @@ end
 function A_mul_B!(c::SubArray{Float64,1,Array{Float64,1},Tuple{UnitRange{Int64}},true}, offset_c::Int64,
                   a::QuasiUpperTriangular, offset_a::Int64, ma::Int64, na::Int64,
                   b::SubArray{Float64,1,Array{Float64,1},Tuple{UnitRange{Int64}},true}, offset_b::Int64, nb::Int64)
-    copy!(c, offset_c, b, offset_b, na*nb)
+    copyto!(c, offset_c, b, offset_b, na*nb)
     alpha = 1.0
     ccall((@blasfunc(dtrmm_), libblas), Cvoid,
           (Ref{UInt8}, Ref{UInt8}, Ref{UInt8}, Ref{UInt8}, Ref{BlasInt}, Ref{BlasInt},
@@ -508,7 +508,7 @@ end
 
 function At_mul_B!(c::VecOrMat{Float64}, offset_c::Int64, a::QuasiUpperTriangular, offset_a::Int64,
                   ma::Int64, na::Int64, b::VecOrMat{Float64}, offset_b::Int64, nb::Int64)
-    copy!(c, offset_c, b, offset_b, ma*nb)
+    copyto!(c, offset_c, b, offset_b, ma*nb)
     alpha = 1.0
     ccall((@blasfunc(dtrmm_), libblas), Cvoid,
           (Ref{UInt8}, Ref{UInt8}, Ref{UInt8}, Ref{UInt8}, Ref{BlasInt}, Ref{BlasInt},
@@ -529,7 +529,7 @@ function At_mul_B!(c::VecOrMat{Float64}, offset_c::Int64, a::QuasiUpperTriangula
 end
 
 function A_mul_Bt!(c::AbstractVector, offset_c::Int64, a::AbstractVector, offset_a::Int64, ma::Int64, na::Int64, b::QuasiUpperTriangular, offset_b::Int64, nb::Int64)
-    copy!(c, offset_c, a, offset_a, ma*na)
+    copyto!(c, offset_c, a, offset_a, ma*na)
     alpha = 1.0
     ccall((@blasfunc(dtrmm_), libblas), Cvoid,
           (Ref{UInt8}, Ref{UInt8}, Ref{UInt8}, Ref{UInt8}, Ref{BlasInt}, Ref{BlasInt},
