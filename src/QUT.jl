@@ -2,20 +2,22 @@ module QUT
 ## QuasiUpperTriangular Matrix of real numbers
 
 using LinearAlgebra
-import LinearAlgebra.checksquare
 import Base.size
 import Base.similar
 import Base.getindex
 import Base.require_one_based_indexing
 import Base.setindex!
 import Base.copy
+import LinearAlgebra.checksquare
 import LinearAlgebra.BlasInt
 import LinearAlgebra.BLAS.@blasfunc
 import LinearAlgebra.BLAS.libblas
 
 export QuasiUpperTriangular, I_plus_rA_ldiv_B!, I_plus_rA_plus_sB_ldiv_C!, A_ldiv_B!, A_rdiv_B!, A_rdiv_Bt!, A_mul_B!, A_mul_Bt!, At_mul_B!
 
-struct QuasiUpperTriangular{T,S<:AbstractMatrix{T}} <: LinearAlgebra.AbstractTriangular{T,S}
+abstract type AbstractQuasiTriangular{T, S <: AbstractMatrix} <: AbstractMatrix{T} end
+
+struct QuasiUpperTriangular{T, S <: AbstractMatrix{T}} <: AbstractQuasiTriangular{T,S}
     data::S
 
     function QuasiUpperTriangular{T,S}(data) where {T,S<:AbstractMatrix{T}}
@@ -49,6 +51,9 @@ similar(A::QuasiUpperTriangular, ::Type{T}) where {T} = QuasiUpperTriangular(sim
 # storage type of A (not wrapped in a triangular type). The following method covers these cases.
 similar(A::QuasiUpperTriangular, ::Type{T}, dims::Dims{N}) where {T,N} = similar(parent(A), T, dims)
 
+Array(A::AbstractQuasiTriangular) = Matrix(A)
+parent(A:: AbstractQuasiTriangular) = A.data
+       
 copy(A::QuasiUpperTriangular) = QuasiUpperTriangular(copy(A.data))
 
 real(A::QuasiUpperTriangular{<:Real}) = A
@@ -451,6 +456,7 @@ function A_mul_B!(c::VecOrMat{Float64}, offset_c::Int64, a::QuasiUpperTriangular
     end
 end
 
+#=
 function A_mul_B!(c::Array{Float64,1}, offset_c::Int64,
                   a::QuasiUpperTriangular, offset_a::Int64, ma::Int64, na::Int64,
                   b::SubArray{Float64,1,Array{Float64,1},Tuple{UnitRange{Int64}},true}, offset_b::Int64, nb::Int64)
@@ -476,6 +482,7 @@ function A_mul_B!(c::Array{Float64,1}, offset_c::Int64,
     end
     c
 end
+
 
 function A_mul_B!(c::SubArray{Float64,1,Array{Float64,1},Tuple{UnitRange{Int64}},true}, offset_c::Int64,
                   a::QuasiUpperTriangular, offset_a::Int64, ma::Int64, na::Int64,
@@ -504,7 +511,7 @@ function A_mul_B!(c::SubArray{Float64,1,Array{Float64,1},Tuple{UnitRange{Int64}}
     end
     c
 end
-
+=#
 
 function At_mul_B!(c::VecOrMat{Float64}, offset_c::Int64, a::QuasiUpperTriangular, offset_a::Int64,
                   ma::Int64, na::Int64, b::VecOrMat{Float64}, offset_b::Int64, nb::Int64)
