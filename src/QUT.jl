@@ -72,7 +72,7 @@ function setindex!(A::QuasiUpperTriangular, x, i::Integer, j::Integer)
     return A
 end
 
-## Generic quasi triangular multiplication
+## Generic quasi triangular right vector, multiplication
 function A_mul_B!(a::QuasiUpperTriangular,b::AbstractVector,work::AbstractVector)
     if size(a,1) < 27
         # pure Julia is faster
@@ -86,6 +86,7 @@ function A_mul_B!(a::QuasiUpperTriangular,b::AbstractVector,work::AbstractVector
     end
 end
 
+# pure Julia implementation right multiplication
 function A_mul_B!(A::QuasiUpperTriangular, B::AbstractVector)
     m = length(B)
     if m != size(A, 1)
@@ -106,6 +107,7 @@ function A_mul_B!(A::QuasiUpperTriangular, B::AbstractVector)
     B[m] = Bi2
 end
 
+# pure Julia transpose implementation right vector multiplication
 function At_mul_B!(A::QuasiUpperTriangular, B::AbstractVector)
     m, n = size(B, 1), size(B, 2)
     if m != size(A, 1)
@@ -129,6 +131,7 @@ function At_mul_B!(A::QuasiUpperTriangular, B::AbstractVector)
     B
 end
 
+# Pure Julia implementation left vector multiplication
 function A_mul_B!(A::AbstractVector, B::QuasiUpperTriangular)
     m, n = size(A)
     if size(B, 1) != n
@@ -152,6 +155,7 @@ function A_mul_B!(A::AbstractVector, B::QuasiUpperTriangular)
     A
 end
 
+# Pure Julia implementation transpose left vector multiplication
 function A_mul_Bt!(A::AbstractVector, B::QuasiUpperTriangular)
     m, n = size(A)
     if size(B, 1) != n
@@ -175,16 +179,19 @@ function A_mul_Bt!(A::AbstractVector, B::QuasiUpperTriangular)
     A
 end
 
+# right matrix multiplication c = a*b
 function A_mul_B!(c::AbstractMatrix, a::QuasiUpperTriangular, b::AbstractMatrix)
-    A_mul_B!(c,1.0,a,b)
+    A_mul_B!(c, 1.0, a, b)
     c
 end
 
+# right matrix multiplication on view in VecOrMat
 function A_mul_B!(c::AbstractVecOrMat, a::QuasiUpperTriangular, b::AbstractVecOrMat, nr::Int64, nc::Int64)
-    A_mul_B!(c,1.0,a,b,nr,nc)
+    A_mul_B!(c, 1.0, a, b, nr, nc)
     c
 end
 
+# c = alpha*a*b
 function A_mul_B!(c::AbstractMatrix, alpha::Float64, a::QuasiUpperTriangular, b::AbstractMatrix)
     m, n = size(b)
     if size(a, 1) != m
@@ -202,6 +209,7 @@ function A_mul_B!(c::AbstractMatrix, alpha::Float64, a::QuasiUpperTriangular, b:
     c
 end
 
+# c = alpha*a*b in view for VecOrMat
 function A_mul_B!(c::AbstractVecOrMat, alpha::Float64, a::QuasiUpperTriangular, b::AbstractVecOrMat, nr::Int64, nc::Int64)
     m, n = size(a)
     copy!(c,b)
@@ -222,6 +230,7 @@ function A_mul_B!(c::AbstractVecOrMat, alpha::Float64, a::QuasiUpperTriangular, 
     c
 end
 
+# right matrix multiplication
 function A_mul_B!(A::QuasiUpperTriangular, B::AbstractMatrix)
     m, n = size(B, 1), size(B, 2)
     if m != size(A, 1)
@@ -411,7 +420,7 @@ A_mul_B!(c::AbstractMatrix,a::QuasiUpperTriangular,b::QuasiUpperTriangular) = A_
 At_mul_B!(c::AbstractMatrix,a::QuasiUpperTriangular,b::QuasiUpperTriangular) = At_mul_B!(c,a,b.data)
 A_mul_Bt!(c::AbstractMatrix,a::QuasiUpperTriangular,b::QuasiUpperTriangular) = A_mul_Bt!(c,a,b.data)
 
-function A_mul_B!(c::VecOrMat{Float64}, offset_c::Int64, a::VecOrMat{Float64}, offset_a::Int64,
+function A_mul_B!(c::AbstractVecOrMat{Float64}, offset_c::Int64, a::AbstractVecOrMat{Float64}, offset_a::Int64,
                   ma::Int64, na::Int64, b::QuasiUpperTriangular, offset_b::Int64, nb::Int64)
     m, n = size(b)
     copyto!(c, offset_c, a, offset_a, ma*na)
@@ -434,8 +443,14 @@ function A_mul_B!(c::VecOrMat{Float64}, offset_c::Int64, a::VecOrMat{Float64}, o
     end
 end
 
-function A_mul_B!(c::VecOrMat{Float64}, offset_c::Int64, a::QuasiUpperTriangular, offset_a::Int64,
-                  ma::Int64, na::Int64, b::VecOrMat{Float64}, offset_b::Int64, nb::Int64)
+function A_mul_B!(c::AbstractVecOrMat{Float64}, offset_c::Int64, a::AbstractVecOrMat{Float64}, offset_a::Int64,
+                  ma::Int64, na::Int64, b::QuasiUpperTriangular)
+    nb = size(b, 2)
+    A_mul_B!(c, offset_c, a, offset_a, ma, na, b, 1, nb)
+end
+
+function A_mul_B!(c::AbstractVecOrMat{Float64}, offset_c::Int64, a::QuasiUpperTriangular, offset_a::Int64,
+                  ma::Int64, na::Int64, b::AbstractVecOrMat{Float64}, offset_b::Int64, nb::Int64)
     copyto!(c, offset_c, b, offset_b, na*nb)
     alpha = 1.0
     ccall((@blasfunc(dtrmm_), libblas), Cvoid,
@@ -454,6 +469,12 @@ function A_mul_B!(c::VecOrMat{Float64}, offset_c::Int64, a::QuasiUpperTriangular
             indc += ma
         end
     end
+end
+
+function A_mul_B!(c::AbstractVecOrMat{Float64}, offset_c::Int64, a::QuasiUpperTriangular,
+                  b::AbstractVecOrMat{Float64}, offset_b::Int64, nb::Int64)
+    ma, na = size(a)
+    A_mul_B!(c, offset_c, a, 1, ma, na, b, offset_b, nb)
 end
 
 #=
@@ -513,7 +534,7 @@ function A_mul_B!(c::SubArray{Float64,1,Array{Float64,1},Tuple{UnitRange{Int64}}
 end
 =#
 
-function At_mul_B!(c::VecOrMat{Float64}, offset_c::Int64, a::QuasiUpperTriangular, offset_a::Int64,
+function At_mul_B!(c::VecOrMat{Float64}, offset_c::Int64, a::QuasiUpperTriangular{Float64}, offset_a::Int64,
                   ma::Int64, na::Int64, b::VecOrMat{Float64}, offset_b::Int64, nb::Int64)
     copyto!(c, offset_c, b, offset_b, ma*nb)
     alpha = 1.0
@@ -535,7 +556,7 @@ function At_mul_B!(c::VecOrMat{Float64}, offset_c::Int64, a::QuasiUpperTriangula
     end
 end
 
-function A_mul_Bt!(c::AbstractVector, offset_c::Int64, a::AbstractVector, offset_a::Int64, ma::Int64, na::Int64, b::QuasiUpperTriangular, offset_b::Int64, nb::Int64)
+function A_mul_Bt!(c::AbstractVector{Float64}, offset_c::Int64, a::AbstractVector{Float64}, offset_a::Int64, ma::Int64, na::Int64, b::QuasiUpperTriangular{Float64}, offset_b::Int64, nb::Int64)
     copyto!(c, offset_c, a, offset_a, ma*na)
     alpha = 1.0
     ccall((@blasfunc(dtrmm_), libblas), Cvoid,
@@ -557,6 +578,10 @@ function A_mul_Bt!(c::AbstractVector, offset_c::Int64, a::AbstractVector, offset
     c
 end
 
+function A_mul_Bt!(c::AbstractVector{Float64}, offset_c::Int64, a::AbstractVector{Float64}, offset_a::Int64, ma::Int64, na::Int64, b::QuasiUpperTriangular{Float64})
+    nb = size(b, 1)
+    A_mul_Bt!(c, offset_c, a, offset_a, ma, na, b, 1, nb)
+end
 
 # solver by substitution
 function A_ldiv_B!(a::QuasiUpperTriangular, b::AbstractMatrix)
