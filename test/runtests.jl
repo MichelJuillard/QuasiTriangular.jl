@@ -1,5 +1,5 @@
 using LinearAlgebra
-using QUT
+using QuasiTriangular
 using Random
 using Test
 

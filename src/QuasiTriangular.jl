@@ -1,4 +1,4 @@
-module QUT
+module QuasiTriangular
 ## QuasiUpperTriangular Matrix of real numbers
 
 using LinearAlgebra

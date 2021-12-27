@@ -1,7 +1,7 @@
-name = "QUT"
-uuid = "a05c3b42-3203-472f-bab1-afcf4068e833"
-authors = ["Michel Juillard <michel.juillard@mjui.fr>"]
-version = "0.1.2"
+name = "QuasiTriangular"
+uuid = "e29349eb-b3c8-4189-b6e7-6b7aca9b1830"
+authors = ["MichelJuillard <michel.juillard@mjui.fr>"]
+version = "0.1.0"
 
 [deps]
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
