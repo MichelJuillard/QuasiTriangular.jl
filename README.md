@@ -62,13 +62,13 @@ Julia implementation. Doesn't need extra workspace.
     where `B` is quasi upper triangular. Solves by back substitution. Lower off-diagonal elements
     make 2 * 2 problems that are solved explicitely.
 - `I_plus_rA_ldiv_B!(r::Float64,a::QuasiUpperTriangular, b::AbstractVector)` solves
-    `(I +r*A)*x = b` where `A` is quasi upper triangular.
+    `(I + r*A)*x = b` where `A` is quasi upper triangular.
 
 ## TODO
-- replace function names for products by `mul!`
+- replace function names for product by `mul!`
 - introduce lazy transpose evaluation
-	- handle quasi lower triangular matrices
-	- benchmark cases that have two different implementations
+- handle quasi lower triangular matrices
+- benchmark cases that have two different implementations
 	
 
 
