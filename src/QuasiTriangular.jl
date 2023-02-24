@@ -8,6 +8,10 @@ import Base.getindex
 import Base.require_one_based_indexing
 import Base.setindex!
 import Base.copy
+import Base.Matrix
+import Base.strides
+import Base.elsize
+import Base.unsafe_convert
 import LinearAlgebra.checksquare
 import LinearAlgebra.BlasInt
 import LinearAlgebra.BLAS.@blasfunc
@@ -71,6 +75,11 @@ function setindex!(A::QuasiUpperTriangular, x, i::Integer, j::Integer)
     end
     return A
 end
+
+## Implement StridedArray interface to be compatible with generic BLAS calls
+Base.strides(a::QuasiUpperTriangular{T, <: AbstractMatrix{T}}) where {T} = strides(a.data)
+Base.elsize(::Type{<:QuasiUpperTriangular{T, <: AbstractMatrix{T}}})  where T = Base.elsize(Matrix{T})
+Base.unsafe_convert(::Type{Ptr{T}}, a::QuasiUpperTriangular{T, <: AbstractMatrix{T}}) where {T} = pointer(a.data)
 
 ## Generic quasi triangular right vector, multiplication
 function A_mul_B!(a::QuasiUpperTriangular,b::AbstractVector,work::AbstractVector)
