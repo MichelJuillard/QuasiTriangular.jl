@@ -3,78 +3,94 @@ using QuasiTriangular
 using Random
 using Test
 
-Aorig = [1 3; 0 2]
-A1 = [Aorig Aorig; zeros(2,2) Aorig]
-A = QuasiUpperTriangular(A1)
-B = randn(4,4)
-C = zeros(4,4)
-#A_mul_B!(C, 1, B, 1, 4, 4, A, 1, 4)
-
-#@test C ≈ B*A1
-
-Aorig = [1 3; 0.5 2]
-A = QuasiUpperTriangular(Aorig)
-B = Matrix{Float64}(I(2))
-X = zeros(2,2)
-#A_ldiv_B!(A,B)
-
-#@test B ≈ inv(Aorig)
-
-B = Matrix{Float64}(I(2))
-A_rdiv_Bt!(B,A)
-@test B ≈ inv(Aorig)'
-
-B = Matrix{Float64}(I(2))
-A_rdiv_B!(B,A)
-
-@test B ≈ inv(Aorig)
-
 Random.seed!(123)
-n = 7
-a = randn(n,n)
-S = schur(a)
-t = S.T
-b = randn(n,n)
-c = similar(b)
 
-@test t*b ≈ A_mul_B!(QuasiUpperTriangular(t),b)
-@test t'*b ≈ At_mul_B!(QuasiUpperTriangular(t),b)
-@test b*t ≈ A_mul_B!(b,QuasiUpperTriangular(t))
-@test b*t' ≈ A_mul_Bt!(b,QuasiUpperTriangular(t))
+# fills all alternating diagonals after the first subdiagonal with a constant
+# to test that garbage values in the lower triangle don't get involved in the computations
+function general_quasi(S)
+    A = copy(S)
+    for n in -2:-2:(-size(A, 1))
+        indices = diagind(A, n)
+        [setindex!(A, 777, i) for i in indices]
+    end
+    QuasiUpperTriangular(A)
+end
 
-@test t*b ≈ A_mul_B!(c,QuasiUpperTriangular(t),b)
-@test t'*b ≈ At_mul_B!(c,QuasiUpperTriangular(t),b)
-@test b*t ≈ A_mul_B!(c,b,QuasiUpperTriangular(t))
-@test b*t' ≈ A_mul_Bt!(c,b,QuasiUpperTriangular(t))
+@testset "QuasiTriangular" verbose=true begin
+    @testset "QuasiUpper - Matrix multiplication" begin
+        n = 7
+        S = schur(randn(n, n))
+        T = S.T
+        Q = general_quasi(T)
+        A = randn(n - 1, n)
+        B = randn(n, n - 1)
+        C1 = similar(B, (n - 1, n))
+        C2 = similar(B, (n, n - 1))
 
-b1 = copy(b)
-x = zeros(n,n)
-A_ldiv_B!(QuasiUpperTriangular(t),b1)
-@test t\b ≈ b1
-b1 = copy(b)
-A_rdiv_B!(b1,QuasiUpperTriangular(t))
-@test b/t ≈ b1
-b1 = copy(b)
-A_rdiv_Bt!(b1,QuasiUpperTriangular(t))
-@test b/t' ≈ b1
+        @test mul!(C1, A, Q) ≈ mul!(C1, A, T)
+        @test mul!(C1, A, Q') ≈ mul!(C1, A, T')
+        @test mul!(C2, Q, B) ≈ mul!(C2, T, B)
+        @test mul!(C2, Q', B) ≈ mul!(C2, T', B)
 
-b = rand(n)
-b1 = copy(b)
-r = rand()
-I_plus_rA_ldiv_B!(r,QuasiUpperTriangular(t),b1)
-@test b1 ≈ (Matrix{Float64}(I(n)) + r*t)\b
-b1 = copy(b)
-s = rand()
-I_plus_rA_plus_sB_ldiv_C!(r,s,QuasiUpperTriangular(t),QuasiUpperTriangular(t*t),b1)
-@test b1 ≈ (Matrix{Float64}(I(n)) + r*t + s*t*t)\b
+        # assert each method is explicitly defined and we're not just falling back to LinearAlgebra
+        @test parentmodule(mul!, typeof.((C1, A, Q))) == QuasiTriangular
+        @test parentmodule(mul!, typeof.((C1, A, Q'))) == QuasiTriangular
+        @test parentmodule(mul!, typeof.((C2, Q, B))) == QuasiTriangular
+        @test parentmodule(mul!, typeof.((C2, Q', B))) == QuasiTriangular
+    end
 
-b = rand(n,n)
-b1 = copy(b)
-r = rand()
-I_plus_rA_ldiv_B!(r,QuasiUpperTriangular(t),b1)
-@test b1 ≈ (Matrix{Float64}(I(n)) + r*t)\b
-b1 = copy(b)
-s = rand()
-I_plus_rA_plus_sB_ldiv_C!(r,s,QuasiUpperTriangular(t),QuasiUpperTriangular(t*t),b1)
-@test b1 ≈ (Matrix{Float64}(I(n)) + r*t + s*t*t)\b
+    @testset "QuasiUpper - Vector multiplication" begin
+        n = 7
+        S = schur(randn(n, n))
+        T = S.T
+        Q = general_quasi(T)
+        a = randn(n)
+        b = randn(n)
+        c = similar(a)
 
+        @test mul!(c, Q, b) ≈ mul!(c, T, b)
+        @test mul!(c, Q', b) ≈ mul!(c, T', b)
+
+        @test parentmodule(mul!, typeof.((c, Q, b))) == QuasiTriangular
+        @test parentmodule(mul!, typeof.((c, Q', b))) == QuasiTriangular
+    end
+
+    @testset "Extra fused operations" begin
+        n = 7
+        a = randn(n, n)
+        S = schur(a)
+        T = S.T
+        B = randn(n, n)
+        C = similar(B)
+        b1 = copy(B)
+        x = zeros(n, n)
+        ldiv!(general_quasi(T), b1)
+        @test T \ B ≈ b1
+        b1 = copy(B)
+        rdiv!(b1, general_quasi(T))
+        @test B / T ≈ b1
+        b1 = copy(B)
+        rdiv!(b1, general_quasi(T)')
+        @test B / T' ≈ b1
+
+        b = rand(n)
+        b1 = copy(b)
+        r = rand()
+        I_plus_rA_ldiv_B!(r, general_quasi(T), b1)
+        @test b1 ≈ (Matrix{Float64}(I(n)) + r * T) \ b
+        b1 = copy(b)
+        s = rand()
+        I_plus_rA_plus_sB_ldiv_C!(r, s, general_quasi(T), general_quasi(T * T), b1)
+        @test b1 ≈ (Matrix{Float64}(I(n)) + r * T + s * T * T) \ b
+
+        b = rand(n, n)
+        b1 = copy(b)
+        r = rand()
+        I_plus_rA_ldiv_B!(r, general_quasi(T), b1)
+        @test b1 ≈ (Matrix{Float64}(I(n)) + r * T) \ b
+        b1 = copy(b)
+        s = rand()
+        I_plus_rA_plus_sB_ldiv_C!(r, s, general_quasi(T), general_quasi(T * T), b1)
+        @test b1 ≈ (Matrix{Float64}(I(n)) + r * T + s * T * T) \ b
+    end
+end
