@@ -1,23 +1,17 @@
 module QuasiTriangular
-## QuasiUpperTriangular Matrix of real numbers
 
 using LinearAlgebra
+
+import Base.copy
 import Base.size
 import Base.similar
 import Base.getindex
-import Base.require_one_based_indexing
 import Base.setindex!
-import Base.copy
 import LinearAlgebra.mul!
 import LinearAlgebra.ldiv!
 import LinearAlgebra.rdiv!
-import LinearAlgebra.checksquare
-import LinearAlgebra.BlasInt
-import LinearAlgebra.BLAS.@blasfunc
-import LinearAlgebra.BLAS.libblas
 
-export QuasiUpperTriangular, I_plus_rA_ldiv_B!, I_plus_rA_plus_sB_ldiv_C!,
- rdiv!, mul!, ldiv!, rdiv!
+export QuasiUpperTriangular, mul!, ldiv!, rdiv!, I_plus_rA_ldiv_B!, I_plus_rA_plus_sB_ldiv_C!
 
 abstract type AbstractQuasiTriangular{T, S <: AbstractMatrix} <: AbstractMatrix{T} end
 
@@ -25,8 +19,8 @@ struct QuasiUpperTriangular{T, S <: AbstractMatrix{T}} <: AbstractQuasiTriangula
     data::S
 
     function QuasiUpperTriangular{T,S}(data) where {T,S<:AbstractMatrix{T}}
-        require_one_based_indexing(data)
-        checksquare(data)
+        Base.require_one_based_indexing(data)
+        LinearAlgebra.checksquare(data)
         new(data)
     end
 end

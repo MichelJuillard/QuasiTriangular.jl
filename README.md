@@ -9,66 +9,40 @@ Type `QuasiUpperTriangular` stores a quasi upper triangular matrix in
 a square matrix. The various algorithms ignore the lower zero elements
 
 ## Functions
+Conventional `mul!` functions are defined to allow normal multiplication using `*`
+
+lets define $Q$ as a QuasiUpperTriangular matrix.
 
 ### Matrix - vector product
-- `A_mul_B!(a::QuasiUpperTriangular,b::AbstractVector,work::AbstractVector)`
-uses BLAS `trmv` and corrects the results for lower nonzero
-elements. For small matrices, (n < 27), uses regular matrix - vector
-product
-- `A_mul_B!(A::QuasiUpperTriangular, B::AbstractVector)` pure
-    Julia implementation. Doesn't need extra workspace.
-### Vector - matrix produc
-- `A_mul_B!(A::AbstractVector, B::QuasiUpperTriangular)` pure
-    Julia implementation. Doesn't need extra workspace.
+- $Q * \vec{v}$
+- $Q^T * \vec{v}$
 
-### Transposed matrix -vector product
-- `At_mul_B!(A::QuasiUpperTriangular, B::AbstractVector)` pure
-    Julia implementation. Doesn't need extra workspace.
+### Matrix - Matrix product
+- $Q * {A}$
+- $Q^T * A$
+- $A * Q$
+- $A * Q^T$
 
-### Vector - transposed matrix product
-- `A_mul_Bt!(A::AbstractVector, B::QuasiUpperTriangular)`  pure
-Julia implementation. Doesn't need extra workspace.
 
-### Matrix - matrix product
-- `A_mul_B!(C::AbstractMatrix, A::QuasiUpperTriangular,
-      B::AbstractMatrix)`: `C = A*B`, `A` is quasi upper triangular
-- `A_mul_B!(C::AbstractMatrix, A::QuasiUpperTriangular,
-	    b::AbstractMatrix)`: `C = αA*B`, `A` is quasi upper triangular
-- `At_mul_B!(C::AbstractMatrix, A::QuasiUpperTriangular,
-          B::AbstractMatrix)`: `C = transpose(A)*B`, `A` is quasi upper triangular
-- `At_mul_B!(C::AbstractMatrix, A::QuasiUpperTriangular,
-	    b::AbstractMatrix)`: `C = α*transpose(A)*B`, `A` is quasi upper triangular
-- `At_mul_B!(A::QuasiUpperTriangular, B::AbstractMatrix)` `B = transpose(A)*B` in place computation,
-    `A` is quasi upper triangular.
-- `A_mul_B!(C::AbstractMatrix, A::AbstractMatrix, B::QuasiUpperTriangular)`:
-    `C = A*B`, `B` is quasi upper triangular.
-- `A_mul_B!(A::AbstractMatrix, B::QuasiUpperTriangular)`:
-    `C = A*B`, in place computation, `B` is quasi upper triangular.
-- `A_mul_Bt!(C::AbstractMatrix, A::AbstractMatrix, B::QuasiUpperTriangular)`:
-    `C = A*transpose(B)`, `B` is quasi upper triangular.
-- `A_mul_Bt!(A::AbstractMatrix, B::QuasiUpperTriangular)`:
-    `C = A*transpose(B)`, in place computation, `B` is quasi upper triangular.
-- `A_mul_B!(C:QuasiUpperTriangular, A::QuasiUpperTriangular, B::QuasiUpperTriangular)`,
-    `A`, `B` and `C` are quasi upper triangular.
+### Linear problem solvers
+- `ldiv!(Q, A)` solves $Q*X = A$,
+    Solves by back substitution. Lower off-diagonal elements make 2 * 2 problems that are solved explicitly.
+- `rdiv!(A, Q)` solves $X*Q = A$,
+    Solves by back substitution. Lower off-diagonal elements make 2 * 2 problems that are solved explicitly.
+- `rdiv!(A, Q')` solves $X*Q^T = A$,
+    Solves by back substitution. Lower off-diagonal elements make 2 * 2 problems that are solved explicitly.
 
-### Linear problem solver
-- `A_ldiv_B!(A::QuasiUpperTriangular, B::AbstractMatrix)` solves `A*X = B`,
-    where `A` is quasi upper triangular. Solves by back substitution. Lower off-diagonal elements
-    make 2 * 2 problems that are solved explicitely.
-- `A_rdiv_B!(A::AbstractMatrix, B::QuasiUpperTriangular)` solves `X*B = A`,
-    where `B` is quasi upper triangular. Solves by back substitution. Lower off-diagonal elements
-    make 2 * 2 problems that are solved explicitely.
-- `A_rdiv_Bt!(A::AbstractMatrix, B::QuasiUpperTriangular)` solves `X*transpose(B) = A`,
-    where `B` is quasi upper triangular. Solves by back substitution. Lower off-diagonal elements
-    make 2 * 2 problems that are solved explicitely.
-- `I_plus_rA_ldiv_B!(r::Float64,a::QuasiUpperTriangular, b::AbstractVector)` solves
-    `(I + r*A)*x = b` where `A` is quasi upper triangular.
+lets define $r$ and $s$ as floats
+     
+> Note: these functions break conventions and mutate their last argument
+- `I_plus_rA_ldiv_B!(r, Q, b)` solves $(I + rQ)*\vec{x} = \vec{b}$
+- `I_plus_rA_ldiv_B!(r, Q, B)` solves $(I + rQ)*X = B$ 
+- `I_plus_rA_plus_sB_ldiv_C!(r, s, Q1, Q2, c)` solves $(I + rQ_1 + sQ_2)*\vec{x} = \vec{c}$
+- `I_plus_rA_plus_sB_ldiv_C!(r, s, Q1, Q2, C)` solves $(I + rQ_1 + sQ_2)*X = C$
 
 ## TODO
-- replace function names for product by `mul!`
-- introduce lazy transpose evaluation
-- handle quasi lower triangular matrices
-- benchmark cases that have two different implementations
-	
-
-
+- [x] replace function names for product by `mul!`
+- [x] introduce lazy transpose evaluation
+- [ ] assert that sub-diagonal does not contain consecutive non-zero elements 
+- [ ] handle quasi lower triangular matrices
+- [ ] profile, benchmark, and reintroduce BLAS based implementations if needed (for specific strided-matrix element-types)
