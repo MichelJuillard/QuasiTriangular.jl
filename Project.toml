@@ -1,7 +1,7 @@
 name = "QuasiTriangular"
 uuid = "e29349eb-b3c8-4189-b6e7-6b7aca9b1830"
 authors = ["MichelJuillard <michel.juillard@mjui.fr>"]
-version = "0.1.0"
+version = "0.2.0"
 
 [deps]
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
