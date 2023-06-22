@@ -41,8 +41,6 @@ lets define $r$ and $s$ as floats
 - `I_plus_rA_plus_sB_ldiv_C!(r, s, Q1, Q2, C)` solves $(I + rQ_1 + sQ_2)*X = C$
 
 ## TODO
-- [x] replace function names for product by `mul!`
-- [x] introduce lazy transpose evaluation
 - [ ] assert that sub-diagonal does not contain consecutive non-zero elements 
 - [ ] handle quasi lower triangular matrices
 - [ ] profile, benchmark, and reintroduce BLAS based implementations if needed (for specific strided-matrix element-types)
