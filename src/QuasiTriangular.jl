@@ -1,15 +1,8 @@
 module QuasiTriangular
 
 using LinearAlgebra
-
-import Base.copy
-import Base.size
-import Base.similar
-import Base.getindex
-import Base.setindex!
-import LinearAlgebra.mul!
-import LinearAlgebra.ldiv!
-import LinearAlgebra.rdiv!
+import Base: Array, copy, getindex, Matrix, require_one_based_indexing, setindex!, similar, size
+import LinearAlgebra: checksquare, BlasInt, BLAS.@blasfunc, BLAS.libblas
 
 export QuasiUpperTriangular, mul!, ldiv!, rdiv!, I_plus_rA_ldiv_B!, I_plus_rA_plus_sB_ldiv_C!
 
