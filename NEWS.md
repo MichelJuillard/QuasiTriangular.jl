@@ -1,3 +1,7 @@
+0.2.1
+=====
+- import Base: Array, Matrix for Julia 1.12
+
 0.2.0
 ======
 - move most functions that operate on submatrices to KroneckerTools package
